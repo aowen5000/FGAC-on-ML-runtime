@@ -19,14 +19,8 @@ targets:
   dev:
     mode: development
     default: true
-    variables:
-      catalog_name: ${var.catalog_name}
 
   staging:
-    variables:
-      catalog_name: ${var.catalog_name}
 
   prod:
     mode: production
-    variables:
-      catalog_name: ${var.catalog_name}

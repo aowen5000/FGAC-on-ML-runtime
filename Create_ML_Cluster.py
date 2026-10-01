@@ -3,6 +3,12 @@
 # MAGIC %md
 # MAGIC # Create ML Cluster for FGAC Testing
 # MAGIC
+# MAGIC > **⚠️ Manual (Option B) path only.** If you deployed with the Databricks CLI
+# MAGIC > (`databricks bundle deploy`), the bundle **already created** the
+# MAGIC > `FGAC-ML-Runtime-Test` cluster from `resources/fgac_cluster.yml`. Running this
+# MAGIC > notebook as well would create a **second, duplicate** cluster with the same name.
+# MAGIC > Only run this notebook if you are deploying manually without the CLI.
+# MAGIC
 # MAGIC This notebook provisions a **single-node ML cluster** running the latest ML LTS runtime for testing Row-Level Filters and Column Masks.
 # MAGIC
 # MAGIC **What it creates:**

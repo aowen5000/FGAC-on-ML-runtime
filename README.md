@@ -95,6 +95,9 @@ FGAC-on-ML-runtime/
 | `catalog_name` | Unity Catalog catalog to deploy into | _(required)_ |
 | `node_type` | EC2 instance type for the ML cluster | `i3.xlarge` |
 
+Set a variable on the command line with `-var="catalog_name=your_catalog"`, or once for
+the whole session via the environment: `export BUNDLE_VAR_catalog_name=your_catalog`.
+
 ### Bundle Targets
 
 | Target | Mode | Use Case |
@@ -107,32 +110,46 @@ FGAC-on-ML-runtime/
 
 ### Option A: Deploy via CLI (recommended)
 
+The bundle commands below authenticate with the CLI profile named by `-p`. Swap
+`fgac-demo` for your own profile name, or omit `-p` entirely to use your `DEFAULT`
+profile. Setting `BUNDLE_VAR_catalog_name` once means you don't repeat `-var=...` on
+every command.
+
 ```bash
 # 1. Clone the repo
 git clone https://github.com/alex-owen_data/FGAC-on-ML-runtime.git
 cd FGAC-on-ML-runtime
 
-# 2. Configure your Databricks CLI profile (if not already done)
+# 2. Configure a Databricks CLI profile (skip if you already have one)
 databricks configure --profile fgac-demo
 
-# 3. Validate the bundle
-databricks bundle validate --target dev -var="catalog_name=your_catalog"
+# 3. Point the bundle at your catalog once (used by every command below)
+export BUNDLE_VAR_catalog_name=your_catalog
 
-# 4. Deploy all resources (cluster + jobs)
-databricks bundle deploy --target dev -var="catalog_name=your_catalog"
+# 4. Validate the bundle
+databricks bundle validate --target dev -p fgac-demo
 
-# 5. Run the setup job to create schema, table, UDFs, groups, and grants
-databricks bundle run fgac_setup --target dev
+# 5. Deploy all resources (ML cluster + jobs)
+databricks bundle deploy --target dev -p fgac-demo
 
-# 6. Run the query test to verify FGAC is working
-databricks bundle run fgac_query_test --target dev
+# 6. Run the setup job to create schema, table, UDFs, group, and grants
+databricks bundle run fgac_setup --target dev -p fgac-demo
+
+# 7. Run the query test to verify FGAC is working
+databricks bundle run fgac_query_test --target dev -p fgac-demo
 ```
+
+> **The bundle creates the ML cluster for you.** `databricks bundle deploy` provisions
+> the `FGAC-ML-Runtime-Test` cluster from `resources/fgac_cluster.yml`. Do **not** run the
+> `Create_ML_Cluster` notebook on this path, it would create a duplicate cluster.
 
 ### Option B: Manual deployment (no CLI)
 
+Use this path only if you are not deploying with the CLI.
+
 1. Import this repo into your Databricks workspace as a Git folder
 2. Open `FGAC_Setup` notebook, set `catalog_name`, and Run All
-3. Open `Create_ML_Cluster` notebook and Run All to provision the ML cluster
+3. Open `Create_ML_Cluster` notebook and Run All to provision the ML cluster (CLI users skip this, the bundle already created it)
 4. Open `FGAC_Query_Test` notebook, **attach it to the `FGAC-ML-Runtime-Test` cluster**, set `catalog_name`, and Run All
 5. Open `Manage_Test_Groups` to add test users to `Upstart_ML_all`
 6. Have those users run `FGAC_Query_Test` on the ML cluster to observe the access differences
@@ -140,11 +157,11 @@ databricks bundle run fgac_query_test --target dev
 ### Teardown
 
 ```bash
-# Remove FGAC resources (table, schema, UDFs, groups)
-databricks bundle run fgac_teardown --target dev
+# Remove FGAC resources (table, schema, UDFs, group)
+databricks bundle run fgac_teardown --target dev -p fgac-demo
 
 # Remove deployed bundle resources (cluster, jobs) from the workspace
-databricks bundle destroy --target dev
+databricks bundle destroy --target dev -p fgac-demo
 ```
 
 Or manually: run `FGAC_Teardown` notebook, then delete the ML cluster from the Compute page.
