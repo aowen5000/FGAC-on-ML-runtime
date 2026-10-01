@@ -1,0 +1,32 @@
+bundle:
+  name: fgac_on_ml_runtime
+  uuid: b8f1a2c3-d4e5-6f78-9a0b-1c2d3e4f5a6b
+
+variables:
+  catalog_name:
+    description: >-
+      Unity Catalog catalog to deploy into.
+      Must already exist and you must have CREATE SCHEMA on it.
+    default: ""
+  node_type:
+    description: EC2 instance type for the ML cluster.
+    default: i3.xlarge
+
+include:
+  - resources/*.yml
+
+targets:
+  dev:
+    mode: development
+    default: true
+    variables:
+      catalog_name: ${var.catalog_name}
+
+  staging:
+    variables:
+      catalog_name: ${var.catalog_name}
+
+  prod:
+    mode: production
+    variables:
+      catalog_name: ${var.catalog_name}

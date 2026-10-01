@@ -1,0 +1,16 @@
+resources:
+  clusters:
+    fgac_ml_cluster:
+      cluster_name: FGAC-ML-Runtime-Test
+      spark_version: 16.4.x-cpu-ml-scala2.12
+      node_type_id: ${var.node_type}
+      num_workers: 0
+      spark_conf:
+        spark.databricks.cluster.profile: singleNode
+        spark.master: "local[*, 4]"
+      custom_tags:
+        ResourceClass: SingleNode
+        Project: FGAC-on-ML-Runtime
+      autotermination_minutes: 60
+      data_security_mode: SINGLE_USER
+      runtime_engine: STANDARD

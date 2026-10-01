@@ -35,24 +35,101 @@ A deployable test environment for **Row-Level Filters** and **Column Masks** in 
 - **`Upstart_ML_restricted`**: Members see only US-region rows (~69 of 200) with masked SSN, email, and salary values.
 - Users not in either group behave like `Upstart_ML_restricted` (restricted view).
 
-## Prerequisites
+## Required Permissions
 
-- Databricks workspace with Unity Catalog enabled
-- An existing catalog where you have `CREATE SCHEMA` privilege
-- Permission to create account-level groups (account admin or group admin)
-- Serverless compute or DBR 15.4+
+The deploying user needs **all** of the following:
 
-## Repository Contents
+### Unity Catalog Permissions
 
-| Notebook | Purpose |
+| Permission | Securable | Why |
+|---|---|---|
+| `USE CATALOG` | Target catalog | Navigate into the catalog |
+| `CREATE SCHEMA` | Target catalog | Create the `rls_demo` schema |
+| `CREATE TABLE` | `<catalog>.rls_demo` schema | Create the `employees` table |
+| `CREATE FUNCTION` | `<catalog>.rls_demo` schema | Create row filter and column mask UDFs |
+| `GRANT` privilege | Target catalog, schema, table, functions | Grant `USE CATALOG`, `USE SCHEMA`, `SELECT`, `EXECUTE` to the two groups |
+
+> **Tip:** Catalog owner or metastore admin satisfies all of the above.
+
+### Account-Level Permissions
+
+| Permission | Why |
 |---|---|
-| `FGAC_Setup` | Creates schema, table, UDFs, groups, and grants (run first) |
-| `Create_ML_Cluster` | Provisions a single-node 16.4 LTS ML cluster for testing |
-| `FGAC_Query_Test` | SELECT * and validation queries — attach to the ML cluster |
-| `Manage_Test_Groups` | Add/remove users from test groups to demo access differences |
-| `FGAC_Teardown` | Removes all resources created by setup |
+| **Account admin** or **Group admin** | Create account-level groups (`Upstart_ML_all`, `Upstart_ML_restricted`) via SCIM API |
+| Account SCIM API access | Add/remove users from groups (`Manage_Test_Groups` notebook) |
 
-## Quick Start
+### Workspace Permissions
+
+| Permission | Why |
+|---|---|
+| `Allow unrestricted cluster creation` OR cluster policy access | Provision the 16.4 LTS ML single-node cluster |
+| Workspace access for demo users | Users in the test groups need workspace access to run the query notebook |
+
+### Declarative Automation Bundle (DAB) Deployment
+
+| Permission | Why |
+|---|---|
+| Databricks CLI installed (v0.218+) | Run `bundle deploy` / `bundle run` commands |
+| Workspace token or OAuth configured | CLI authentication to the target workspace |
+| `CAN_MANAGE` on deployed jobs | Automatically granted to the deploying user |
+
+## Repository Structure
+
+```
+FGAC-on-ML-runtime/
+├── databricks.yml              # DAB bundle config (variables, targets)
+├── resources/
+│   ├── fgac_cluster.yml        # ML cluster definition (16.4 LTS, i3.xlarge)
+│   └── fgac_jobs.yml           # Job definitions for all notebooks
+├── FGAC_Setup.py               # Creates schema, table, UDFs, groups, grants
+├── Create_ML_Cluster.py        # Provisions the ML cluster via API
+├── FGAC_Query_Test.py          # SELECT * and validation queries
+├── Manage_Test_Groups.py       # Add/remove users from test groups
+├── FGAC_Teardown.py            # Removes all resources
+└── README.md
+```
+
+### Bundle Variables
+
+| Variable | Description | Default |
+|---|---|---|
+| `catalog_name` | Unity Catalog catalog to deploy into | _(required)_ |
+| `node_type` | EC2 instance type for the ML cluster | `i3.xlarge` |
+
+### Bundle Targets
+
+| Target | Mode | Use Case |
+|---|---|---|
+| `dev` | development | Local testing (default) |
+| `staging` | default | Pre-production validation |
+| `prod` | production | Customer-facing demo environment |
+
+## Deployment with Declarative Automation Bundles (DAB)
+
+### Option A: Deploy via CLI (recommended)
+
+```bash
+# 1. Clone the repo
+git clone https://github.com/alex-owen_data/FGAC-on-ML-runtime.git
+cd FGAC-on-ML-runtime
+
+# 2. Configure your Databricks CLI profile (if not already done)
+databricks configure --profile fgac-demo
+
+# 3. Validate the bundle
+databricks bundle validate --target dev -var="catalog_name=your_catalog"
+
+# 4. Deploy all resources (cluster + jobs)
+databricks bundle deploy --target dev -var="catalog_name=your_catalog"
+
+# 5. Run the setup job to create schema, table, UDFs, groups, and grants
+databricks bundle run fgac_setup --target dev
+
+# 6. Run the query test to verify FGAC is working
+databricks bundle run fgac_query_test --target dev
+```
+
+### Option B: Manual deployment (no CLI)
 
 1. Import this repo into your Databricks workspace as a Git folder
 2. Open `FGAC_Setup` notebook, set `catalog_name`, and Run All
@@ -60,6 +137,18 @@ A deployable test environment for **Row-Level Filters** and **Column Masks** in 
 4. Open `FGAC_Query_Test` notebook, **attach it to the `FGAC-ML-Runtime-Test` cluster**, set `catalog_name`, and Run All
 5. Open `Manage_Test_Groups` to add test users to `Upstart_ML_all` or `Upstart_ML_restricted`
 6. Have those users run `FGAC_Query_Test` on the ML cluster to observe the access differences
+
+### Teardown
+
+```bash
+# Remove FGAC resources (table, schema, UDFs, groups)
+databricks bundle run fgac_teardown --target dev
+
+# Remove deployed bundle resources (cluster, jobs) from the workspace
+databricks bundle destroy --target dev
+```
+
+Or manually: run `FGAC_Teardown` notebook, then delete the ML cluster from the Compute page.
 
 ## ML Cluster Details
 

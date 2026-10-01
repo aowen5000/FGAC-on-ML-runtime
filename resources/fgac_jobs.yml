@@ -1,0 +1,51 @@
+resources:
+  jobs:
+    fgac_setup:
+      name: FGAC_Setup
+      description: >-
+        Creates the rls_demo schema, employees table (Faker data),
+        row filter / column mask UDFs, account-level groups, and grants.
+      tasks:
+        - task_key: setup
+          notebook_task:
+            notebook_path: ../FGAC_Setup.py
+            base_parameters:
+              catalog_name: ${var.catalog_name}
+          existing_cluster_id: ${resources.clusters.fgac_ml_cluster.id}
+
+    fgac_query_test:
+      name: FGAC_Query_Test
+      description: >-
+        Runs SELECT * and validation queries against the employees table
+        to demonstrate row-level filters and column masks on the ML runtime.
+      tasks:
+        - task_key: query_test
+          notebook_task:
+            notebook_path: ../FGAC_Query_Test.py
+            base_parameters:
+              catalog_name: ${var.catalog_name}
+          existing_cluster_id: ${resources.clusters.fgac_ml_cluster.id}
+
+    fgac_manage_groups:
+      name: Manage_Test_Groups
+      description: >-
+        Add/remove users from Upstart_ML_all and Upstart_ML_restricted
+        groups to demonstrate FGAC access differences.
+      tasks:
+        - task_key: manage_groups
+          notebook_task:
+            notebook_path: ../Manage_Test_Groups.py
+          existing_cluster_id: ${resources.clusters.fgac_ml_cluster.id}
+
+    fgac_teardown:
+      name: FGAC_Teardown
+      description: >-
+        Removes all FGAC resources: row filter, column masks, UDFs,
+        table, schema, and account-level groups.
+      tasks:
+        - task_key: teardown
+          notebook_task:
+            notebook_path: ../FGAC_Teardown.py
+            base_parameters:
+              catalog_name: ${var.catalog_name}
+          existing_cluster_id: ${resources.clusters.fgac_ml_cluster.id}
