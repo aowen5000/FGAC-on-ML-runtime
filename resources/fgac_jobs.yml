@@ -29,8 +29,8 @@ resources:
     fgac_manage_groups:
       name: Manage_Test_Groups
       description: >-
-        Add/remove users from Upstart_ML_all and Upstart_ML_restricted
-        groups to demonstrate FGAC access differences.
+        Add/remove users from the Upstart_ML_all group
+        to demonstrate FGAC access differences.
       tasks:
         - task_key: manage_groups
           notebook_task:

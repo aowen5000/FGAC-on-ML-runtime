@@ -3,17 +3,18 @@
 # MAGIC %md
 # MAGIC # Manage Test Groups — Add/Remove Users for FGAC Demo
 # MAGIC
-# MAGIC Use this notebook to **add and remove users** from the two FGAC test groups:
+# MAGIC Use this notebook to **add and remove users** from the FGAC test group:
 # MAGIC
 # MAGIC | Group | Access Level |
 # MAGIC |---|---|
 # MAGIC | `Upstart_ML_all` | Full access — sees all 200 rows, unmasked SSN/email/salary |
-# MAGIC | `Upstart_ML_restricted` | Restricted — sees only US rows (~69), masked SSN/email/salary |
+# MAGIC
+# MAGIC Users **not** in `Upstart_ML_all` see only US rows (~69) with masked SSN/email/salary (restricted view).
 # MAGIC
 # MAGIC **Demo workflow:**
-# MAGIC 1. Add a user to `Upstart_ML_restricted` → have them run `FGAC_Query_Test` → observe masked/filtered data
-# MAGIC 2. Move that user to `Upstart_ML_all` → re-run `FGAC_Query_Test` → observe full unmasked data
-# MAGIC 3. Remove the user from both groups to reset
+# MAGIC 1. Have a user run `FGAC_Query_Test` **before** adding them → observe masked/filtered data
+# MAGIC 2. Add the user to `Upstart_ML_all` → re-run `FGAC_Query_Test` → observe full unmasked data
+# MAGIC 3. Remove the user from the group to reset
 # MAGIC
 # MAGIC > **Tip:** Users must detach and reattach their cluster (or restart it) after a group change for the new membership to take effect.
 
@@ -114,8 +115,6 @@ print("Helper functions loaded.")
 # DBTITLE 1,List Current Group Members
 print("=" * 50)
 list_group_members("Upstart_ML_all")
-print()
-list_group_members("Upstart_ML_restricted")
 print("=" * 50)
 
 # COMMAND ----------
@@ -128,74 +127,23 @@ add_user_to_group(USER_EMAIL, "Upstart_ML_all")
 
 # COMMAND ----------
 
-# DBTITLE 1,Add User to Upstart_ML_restricted (Filtered/Masked Access)
-# ── EDIT THIS: set the email of the user to add ──
-USER_EMAIL = "user@example.com"  # <-- change this
-
-add_user_to_group(USER_EMAIL, "Upstart_ML_restricted")
-
-# COMMAND ----------
-
-# DBTITLE 1,Remove User from Upstart_ML_all
+# DBTITLE 1,Remove User from Upstart_ML_all (Reset)
 # ── EDIT THIS: set the email of the user to remove ──
 USER_EMAIL = "user@example.com"  # <-- change this
 
 remove_user_from_group(USER_EMAIL, "Upstart_ML_all")
+print("Done! User will see the restricted view (US rows only, masked data) after reattaching.")
 
 # COMMAND ----------
 
-# DBTITLE 1,Remove User from Upstart_ML_restricted
-# ── EDIT THIS: set the email of the user to remove ──
-USER_EMAIL = "user@example.com"  # <-- change this
-
-remove_user_from_group(USER_EMAIL, "Upstart_ML_restricted")
-
-# COMMAND ----------
-
-# DBTITLE 1,Move User: Restricted → Full Access
-# ── EDIT THIS: set the email of the user to move ──
-USER_EMAIL = "user@example.com"  # <-- change this
-
-print(f"Moving '{USER_EMAIL}' from restricted to full access...")
-remove_user_from_group(USER_EMAIL, "Upstart_ML_restricted")
-add_user_to_group(USER_EMAIL, "Upstart_ML_all")
-print("Done! User should reattach/restart their cluster for changes to take effect.")
-
-# COMMAND ----------
-
-# DBTITLE 1,Move User: Full Access → Restricted
-# ── EDIT THIS: set the email of the user to move ──
-USER_EMAIL = "user@example.com"  # <-- change this
-
-print(f"Moving '{USER_EMAIL}' from full access to restricted...")
-remove_user_from_group(USER_EMAIL, "Upstart_ML_all")
-add_user_to_group(USER_EMAIL, "Upstart_ML_restricted")
-print("Done! User should reattach/restart their cluster for changes to take effect.")
-
-# COMMAND ----------
-
-# DBTITLE 1,Remove User from All FGAC Groups (Reset)
-# ── EDIT THIS: set the email of the user to remove from all groups ──
-USER_EMAIL = "user@example.com"  # <-- change this
-
-print(f"Removing '{USER_EMAIL}' from all FGAC groups...")
-for group in ["Upstart_ML_all", "Upstart_ML_restricted"]:
-    try:
-        remove_user_from_group(USER_EMAIL, group)
-    except Exception as e:
-        print(f"  Skipped '{group}': {e}")
-print("Done! User is now in neither group (will see restricted view by default).")
-
-# COMMAND ----------
-
-# DBTITLE 1,Bulk Add Multiple Users
+# DBTITLE 1,Bulk Add Multiple Users to Upstart_ML_all
 # ── EDIT THIS: set the list of emails and target group ──
 USER_EMAILS = [
     "user1@example.com",
     "user2@example.com",
     "user3@example.com",
 ]
-TARGET_GROUP = "Upstart_ML_restricted"  # or "Upstart_ML_all"
+TARGET_GROUP = "Upstart_ML_all"
 
 print(f"Adding {len(USER_EMAILS)} users to '{TARGET_GROUP}'...")
 for email in USER_EMAILS:

@@ -10,8 +10,8 @@ A deployable test environment for **Row-Level Filters** and **Column Masks** in 
 | Table | `<your_catalog>.rls_demo.employees` — 200 rows of Faker-generated employee data |
 | Row Filter | `region_filter` — restricts non-privileged users to US-region rows only |
 | Column Masks | `mask_ssn` (last 4 digits), `mask_salary` (NULL), `mask_email` (redacted username) |
-| Groups | `Upstart_ML_all` (full access) and `Upstart_ML_restricted` (filtered/masked view) |
-| Grants | USE CATALOG, USE SCHEMA, SELECT, EXECUTE on UDFs for both groups |
+| Group | `Upstart_ML_all` (full access — members bypass all restrictions) |
+| Grants | USE CATALOG, USE SCHEMA, SELECT, EXECUTE on UDFs for `Upstart_ML_all` |
 
 ## Employee Table Schema
 
@@ -29,11 +29,10 @@ A deployable test environment for **Row-Level Filters** and **Column Masks** in 
 | `date_of_birth` | DATE | — |
 | `address` | STRING | — |
 
-## How Groups Work
+## How the Group Works
 
 - **`Upstart_ML_all`**: Members see all 200 rows with full, unmasked data. The UDFs check `IS_ACCOUNT_GROUP_MEMBER('Upstart_ML_all')` and bypass all restrictions.
-- **`Upstart_ML_restricted`**: Members see only US-region rows (~69 of 200) with masked SSN, email, and salary values.
-- Users not in either group behave like `Upstart_ML_restricted` (restricted view).
+- Users **not** in the group see only US-region rows (~69 of 200) with masked SSN, email, and salary values.
 
 ## Required Permissions
 
@@ -47,7 +46,7 @@ The deploying user needs **all** of the following:
 | `CREATE SCHEMA` | Target catalog | Create the `rls_demo` schema |
 | `CREATE TABLE` | `<catalog>.rls_demo` schema | Create the `employees` table |
 | `CREATE FUNCTION` | `<catalog>.rls_demo` schema | Create row filter and column mask UDFs |
-| `GRANT` privilege | Target catalog, schema, table, functions | Grant `USE CATALOG`, `USE SCHEMA`, `SELECT`, `EXECUTE` to the two groups |
+| `GRANT` privilege | Target catalog, schema, table, functions | Grant `USE CATALOG`, `USE SCHEMA`, `SELECT`, `EXECUTE` to `Upstart_ML_all` |
 
 > **Tip:** Catalog owner or metastore admin satisfies all of the above.
 
@@ -55,7 +54,7 @@ The deploying user needs **all** of the following:
 
 | Permission | Why |
 |---|---|
-| **Account admin** or **Group admin** | Create account-level groups (`Upstart_ML_all`, `Upstart_ML_restricted`) via SCIM API |
+| **Account admin** or **Group admin** | Create account-level group (`Upstart_ML_all`) via SCIM API |
 | Account SCIM API access | Add/remove users from groups (`Manage_Test_Groups` notebook) |
 
 ### Workspace Permissions
@@ -135,7 +134,7 @@ databricks bundle run fgac_query_test --target dev
 2. Open `FGAC_Setup` notebook, set `catalog_name`, and Run All
 3. Open `Create_ML_Cluster` notebook and Run All to provision the ML cluster
 4. Open `FGAC_Query_Test` notebook, **attach it to the `FGAC-ML-Runtime-Test` cluster**, set `catalog_name`, and Run All
-5. Open `Manage_Test_Groups` to add test users to `Upstart_ML_all` or `Upstart_ML_restricted`
+5. Open `Manage_Test_Groups` to add test users to `Upstart_ML_all`
 6. Have those users run `FGAC_Query_Test` on the ML cluster to observe the access differences
 
 ### Teardown
@@ -168,17 +167,16 @@ The `Create_ML_Cluster` notebook provisions:
 ## Demo Walkthrough
 
 ### 1. Show restricted access
-- Use `Manage_Test_Groups` to add a demo user to `Upstart_ML_restricted`
-- Have them attach to the ML cluster, open `FGAC_Query_Test`, set `catalog_name`, and Run All
+- Have a demo user attach to the ML cluster, open `FGAC_Query_Test`, set `catalog_name`, and Run All
 - They'll see only US rows (~69) with masked SSN (`***-**-XXXX`), email (`****@domain`), and salary (`NULL`)
 
 ### 2. Show full access
-- Use `Manage_Test_Groups` to move the user from `Upstart_ML_restricted` to `Upstart_ML_all`
+- Use `Manage_Test_Groups` to add the user to `Upstart_ML_all`
 - User restarts/reattaches their cluster, re-runs `FGAC_Query_Test`
 - They'll now see all 200 rows with raw, unmasked data
 
 ### 3. Reset
-- Use `Manage_Test_Groups` to remove the user from all groups
+- Use `Manage_Test_Groups` to remove the user from `Upstart_ML_all`
 - They'll revert to the restricted view (default for non-members)
 
 > **Note:** Group membership changes require the user to detach and reattach their cluster (or restart it) before taking effect.

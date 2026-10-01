@@ -1,4 +1,8 @@
 # Databricks notebook source
+# /// script
+# [tool.databricks.environment]
+# environment_version = "6"
+# ///
 # DBTITLE 1,FGAC Query Test — Row-Level Filters & Column Masks on ML Runtime
 # MAGIC %md
 # MAGIC # FGAC Query Test — Row-Level Filters & Column Masks on ML Runtime
@@ -9,7 +13,7 @@
 # MAGIC
 # MAGIC **What to expect:**
 # MAGIC - **`Upstart_ML_all` members**: See all 200 rows with full, unmasked data
-# MAGIC - **`Upstart_ML_restricted` members / others**: See only US-region rows (~69) with masked SSN, email, and salary
+# MAGIC - **Others**: See only US-region rows (~69) with masked SSN, email, and salary
 # MAGIC
 # MAGIC **Parameter:** `catalog_name` — the catalog used in `FGAC_Setup`
 
@@ -29,8 +33,7 @@ print(f"Current user: {spark.sql('SELECT current_user()').collect()[0][0]}")
 membership = spark.sql("""
     SELECT 
         current_user() AS user,
-        IS_ACCOUNT_GROUP_MEMBER('Upstart_ML_all') AS in_upstart_ml_all,
-        IS_ACCOUNT_GROUP_MEMBER('Upstart_ML_restricted') AS in_upstart_ml_restricted
+        IS_ACCOUNT_GROUP_MEMBER('Upstart_ML_all') AS in_upstart_ml_all
 """)
 membership.show(truncate=False)
 
@@ -46,8 +49,8 @@ else:
 # MAGIC %sql
 # MAGIC -- This query demonstrates Row-Level Filters and Column Masks in action.
 # MAGIC -- The results you see depend on your group membership:
-# MAGIC --   Upstart_ML_all:        All 200 rows, raw SSN/email/salary
-# MAGIC --   Upstart_ML_restricted: Only US rows (~69), masked SSN/email/salary
+# MAGIC --   Upstart_ML_all members: All 200 rows, raw SSN/email/salary
+# MAGIC --   Others:                 Only US rows (~69), masked SSN/email/salary
 # MAGIC
 # MAGIC SELECT * FROM ${catalog_name}.rls_demo.employees
 
@@ -103,7 +106,66 @@ else:
 
 # COMMAND ----------
 
-# DBTITLE 1,Table Security Metadata
+# DBTITLE 1,Table Security Metadata (via information_schema)
 # MAGIC %sql
-# MAGIC -- Shows the row filter and column masks applied to the table
-# MAGIC DESCRIBE EXTENDED ${catalog_name}.rls_demo.employees
+# MAGIC -- DESCRIBE EXTENDED is not supported on dedicated (single-user) compute with
+# MAGIC -- FGAC-protected tables until DBR 17.1+. Use information_schema instead.
+# MAGIC
+# MAGIC SELECT column_name, data_type, is_nullable, comment
+# MAGIC FROM ${catalog_name}.information_schema.columns
+# MAGIC WHERE table_schema = 'rls_demo' AND table_name = 'employees'
+# MAGIC ORDER BY ordinal_position
+
+# COMMAND ----------
+
+# DBTITLE 1,Add Current User to Upstart_ML_all Group
+
+# Add the current user to 'Upstart_ML_all' so they can see all 200 rows
+# with unmasked SSN, email, and salary columns.
+# Group management requires the SCIM API — there is no SQL equivalent.
+# After running this cell, re-run cells 3–8 above to verify the change.
+
+import requests, json
+
+ctx = dbutils.notebook.entry_point.getDbutils().notebook().getContext()
+HOST = ctx.apiUrl().get()
+TOKEN = ctx.apiToken().get()
+HEADERS = {"Authorization": f"Bearer {TOKEN}", "Content-Type": "application/json"}
+
+# Get current user email
+me = spark.sql("SELECT current_user()").collect()[0][0]
+
+# Look up account-level group and user IDs
+ACCOUNT_SCIM = f"{HOST}/api/2.0/account/scim/v2"
+
+grp_resp = requests.get(f"{ACCOUNT_SCIM}/Groups", headers=HEADERS,
+                        params={"filter": 'displayName eq "Upstart_ML_all"'})
+grp_resp.raise_for_status()
+groups = grp_resp.json().get("Resources", [])
+assert groups, "Group 'Upstart_ML_all' not found — run FGAC_Setup first"
+group_id = groups[0]["id"]
+
+usr_resp = requests.get(f"{ACCOUNT_SCIM}/Users", headers=HEADERS,
+                        params={"filter": f'userName eq "{me}"'})
+usr_resp.raise_for_status()
+users = usr_resp.json().get("Resources", [])
+assert users, f"User '{me}' not found in account SCIM"
+user_id = users[0]["id"]
+
+# Add user to group
+patch_resp = requests.patch(
+    f"{ACCOUNT_SCIM}/Groups/{group_id}",
+    headers=HEADERS,
+    json={
+        "schemas": ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+        "Operations": [{"op": "add", "path": "members",
+                        "value": [{"value": user_id}]}],
+    },
+)
+assert patch_resp.status_code in [200, 204], f"SCIM patch failed: {patch_resp.status_code} - {patch_resp.text[:200]}"
+
+print(f"✅ Added '{me}' to 'Upstart_ML_all'")
+print("\n⚠️  On dedicated (single-user) compute, group membership is cached at")
+print("   cluster attach time. You MUST detach and reattach the cluster")
+print("   (or restart it) for the change to take effect.")
+print("\n⬆️  After reattaching, re-run cells 2–8 to see ALL 200 rows with unmasked data.")

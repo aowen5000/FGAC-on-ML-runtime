@@ -63,7 +63,7 @@ headers = {
     "Content-Type": "application/json"
 }
 
-for group_name in ["Upstart_ML_all", "Upstart_ML_restricted"]:
+for group_name in ["Upstart_ML_all"]:
     # Find the group by name
     resp = requests.get(
         f"{host}/api/2.0/account/scim/v2/Groups?filter=displayName eq \"{group_name}\"",

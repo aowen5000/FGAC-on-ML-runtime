@@ -9,7 +9,7 @@
 # MAGIC 1. A schema in your chosen catalog
 # MAGIC 2. An `employees` table with 200 rows of realistic Faker-generated data
 # MAGIC 3. SQL UDFs for row filtering and column masking
-# MAGIC 4. Two account-level groups: `Upstart_ML_all` (full access) and `Upstart_ML_restricted` (filtered/masked)
+# MAGIC 4. An account-level group: `Upstart_ML_all` (full access — members bypass all restrictions)
 # MAGIC 5. All necessary grants (USE CATALOG, USE SCHEMA, SELECT, EXECUTE)
 # MAGIC
 # MAGIC **Parameters:**
@@ -172,7 +172,7 @@ headers = {
     "Content-Type": "application/json"
 }
 
-for group_name in ["Upstart_ML_all", "Upstart_ML_restricted"]:
+for group_name in ["Upstart_ML_all"]:
     payload = {
         "displayName": group_name,
         "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"]
@@ -198,19 +198,12 @@ SCHEMA = "rls_demo"
 
 grants = [
     f"GRANT USE CATALOG ON CATALOG {CATALOG} TO `Upstart_ML_all`",
-    f"GRANT USE CATALOG ON CATALOG {CATALOG} TO `Upstart_ML_restricted`",
     f"GRANT USE SCHEMA ON SCHEMA {CATALOG}.{SCHEMA} TO `Upstart_ML_all`",
-    f"GRANT USE SCHEMA ON SCHEMA {CATALOG}.{SCHEMA} TO `Upstart_ML_restricted`",
     f"GRANT SELECT ON TABLE {CATALOG}.{SCHEMA}.employees TO `Upstart_ML_all`",
-    f"GRANT SELECT ON TABLE {CATALOG}.{SCHEMA}.employees TO `Upstart_ML_restricted`",
     f"GRANT EXECUTE ON FUNCTION {CATALOG}.{SCHEMA}.region_filter TO `Upstart_ML_all`",
-    f"GRANT EXECUTE ON FUNCTION {CATALOG}.{SCHEMA}.region_filter TO `Upstart_ML_restricted`",
     f"GRANT EXECUTE ON FUNCTION {CATALOG}.{SCHEMA}.mask_ssn TO `Upstart_ML_all`",
-    f"GRANT EXECUTE ON FUNCTION {CATALOG}.{SCHEMA}.mask_ssn TO `Upstart_ML_restricted`",
     f"GRANT EXECUTE ON FUNCTION {CATALOG}.{SCHEMA}.mask_salary TO `Upstart_ML_all`",
-    f"GRANT EXECUTE ON FUNCTION {CATALOG}.{SCHEMA}.mask_salary TO `Upstart_ML_restricted`",
     f"GRANT EXECUTE ON FUNCTION {CATALOG}.{SCHEMA}.mask_email TO `Upstart_ML_all`",
-    f"GRANT EXECUTE ON FUNCTION {CATALOG}.{SCHEMA}.mask_email TO `Upstart_ML_restricted`",
 ]
 
 success = 0
