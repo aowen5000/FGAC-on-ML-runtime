@@ -49,6 +49,7 @@ A deployable test environment for **Row-Level Filters** and **Column Masks** in 
 | `FGAC_Setup` | Creates schema, table, UDFs, groups, and grants (run first) |
 | `Create_ML_Cluster` | Provisions a single-node 16.4 LTS ML cluster for testing |
 | `FGAC_Query_Test` | SELECT * and validation queries — attach to the ML cluster |
+| `Manage_Test_Groups` | Add/remove users from test groups to demo access differences |
 | `FGAC_Teardown` | Removes all resources created by setup |
 
 ## Quick Start
@@ -57,7 +58,8 @@ A deployable test environment for **Row-Level Filters** and **Column Masks** in 
 2. Open `FGAC_Setup` notebook, set `catalog_name`, and Run All
 3. Open `Create_ML_Cluster` notebook and Run All to provision the ML cluster
 4. Open `FGAC_Query_Test` notebook, **attach it to the `FGAC-ML-Runtime-Test` cluster**, set `catalog_name`, and Run All
-5. Add test users to `Upstart_ML_all` or `Upstart_ML_restricted` and have them run `FGAC_Query_Test`
+5. Open `Manage_Test_Groups` to add test users to `Upstart_ML_all` or `Upstart_ML_restricted`
+6. Have those users run `FGAC_Query_Test` on the ML cluster to observe the access differences
 
 ## ML Cluster Details
 
@@ -74,18 +76,20 @@ The `Create_ML_Cluster` notebook provisions:
 3. Run All cells — this removes the row filter, column masks, UDFs, table, schema, and groups
 4. Manually terminate or delete the ML cluster from the Compute page
 
-## Testing the Setup
+## Demo Walkthrough
 
-As a user in `Upstart_ML_restricted`:
-```sql
--- Should return ~69 rows, all with region = 'US'
-SELECT * FROM <your_catalog>.rls_demo.employees;
+### 1. Show restricted access
+- Use `Manage_Test_Groups` to add a demo user to `Upstart_ML_restricted`
+- Have them attach to the ML cluster, open `FGAC_Query_Test`, set `catalog_name`, and Run All
+- They'll see only US rows (~69) with masked SSN (`***-**-XXXX`), email (`****@domain`), and salary (`NULL`)
 
--- SSN appears as ***-**-XXXX, email as ****@domain.com, salary as NULL
-```
+### 2. Show full access
+- Use `Manage_Test_Groups` to move the user from `Upstart_ML_restricted` to `Upstart_ML_all`
+- User restarts/reattaches their cluster, re-runs `FGAC_Query_Test`
+- They'll now see all 200 rows with raw, unmasked data
 
-As a user in `Upstart_ML_all`:
-```sql
--- Should return all 200 rows with full unmasked data
-SELECT * FROM <your_catalog>.rls_demo.employees;
-```
+### 3. Reset
+- Use `Manage_Test_Groups` to remove the user from all groups
+- They'll revert to the restricted view (default for non-members)
+
+> **Note:** Group membership changes require the user to detach and reattach their cluster (or restart it) before taking effect.
