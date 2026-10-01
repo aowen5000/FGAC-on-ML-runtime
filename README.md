@@ -42,19 +42,37 @@ A deployable test environment for **Row-Level Filters** and **Column Masks** in 
 - Permission to create account-level groups (account admin or group admin)
 - Serverless compute or DBR 15.4+
 
+## Repository Contents
+
+| Notebook | Purpose |
+|---|---|
+| `FGAC_Setup` | Creates schema, table, UDFs, groups, and grants (run first) |
+| `Create_ML_Cluster` | Provisions a single-node 16.4 LTS ML cluster for testing |
+| `FGAC_Query_Test` | SELECT * and validation queries — attach to the ML cluster |
+| `FGAC_Teardown` | Removes all resources created by setup |
+
 ## Quick Start
 
 1. Import this repo into your Databricks workspace as a Git folder
-2. Open `FGAC_Setup` notebook
-3. Set the `catalog_name` widget to your target catalog
-4. Run All cells
-5. Add test users to `Upstart_ML_all` or `Upstart_ML_restricted` and query the table
+2. Open `FGAC_Setup` notebook, set `catalog_name`, and Run All
+3. Open `Create_ML_Cluster` notebook and Run All to provision the ML cluster
+4. Open `FGAC_Query_Test` notebook, **attach it to the `FGAC-ML-Runtime-Test` cluster**, set `catalog_name`, and Run All
+5. Add test users to `Upstart_ML_all` or `Upstart_ML_restricted` and have them run `FGAC_Query_Test`
+
+## ML Cluster Details
+
+The `Create_ML_Cluster` notebook provisions:
+- **Runtime**: 16.4 LTS ML (includes Apache Spark 3.5.2, Scala 2.12)
+- **Node**: `i3.xlarge` single-node (31 GB RAM, 4 cores) — configurable via widget
+- **Access Mode**: Single User
+- **Auto-terminate**: 60 minutes
 
 ## Cleanup
 
 1. Open `FGAC_Teardown` notebook
 2. Set the `catalog_name` widget to the same catalog used during setup
 3. Run All cells — this removes the row filter, column masks, UDFs, table, schema, and groups
+4. Manually terminate or delete the ML cluster from the Compute page
 
 ## Testing the Setup
 
