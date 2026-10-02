@@ -2,6 +2,10 @@
 
 A deployable test environment for **Row-Level Filters** and **Column Masks** in Databricks Unity Catalog.
 
+> **Read-only project.** This repo is shared as a reference artifact and is not accepting
+> external contributions. Issues are disabled and pull requests will not be merged. See
+> [CONTRIBUTING.md](CONTRIBUTING.md). You are welcome to fork and adapt it for your own use.
+
 ## What This Creates
 
 | Resource | Details |
