@@ -51,14 +51,23 @@ print(f"Will tear down resources in: {CATALOG}.{SCHEMA}")
 # COMMAND ----------
 
 # DBTITLE 1,Step 1: Remove Row Filter and Column Masks
-# MAGIC %sql
-# MAGIC -- Remove row filter
-# MAGIC ALTER TABLE ${catalog_name}.rls_demo.employees DROP ROW FILTER;
-# MAGIC
-# MAGIC -- Remove column masks
-# MAGIC ALTER TABLE ${catalog_name}.rls_demo.employees ALTER COLUMN ssn DROP MASK;
-# MAGIC ALTER TABLE ${catalog_name}.rls_demo.employees ALTER COLUMN salary DROP MASK;
-# MAGIC ALTER TABLE ${catalog_name}.rls_demo.employees ALTER COLUMN email DROP MASK
+# Make teardown safely re-runnable. If the table or its policies are already gone (for
+# example setup never finished, or teardown was run twice), these ALTERs would otherwise
+# error. Dropping policies IS allowed on dedicated (single-user) compute, so attempt each
+# one and swallow the "nothing to drop" case. The real cleanup is DROP SCHEMA ... CASCADE
+# in Step 3, so a failure here is not fatal.
+FQN = f"{CATALOG}.{SCHEMA}.employees"
+for stmt in [
+    f"ALTER TABLE {FQN} DROP ROW FILTER",
+    f"ALTER TABLE {FQN} ALTER COLUMN ssn DROP MASK",
+    f"ALTER TABLE {FQN} ALTER COLUMN salary DROP MASK",
+    f"ALTER TABLE {FQN} ALTER COLUMN email DROP MASK",
+]:
+    try:
+        spark.sql(stmt)
+        print(f"OK: {stmt}")
+    except Exception as e:
+        print(f"  (nothing to drop) {str(e)[:100]}")
 
 # COMMAND ----------
 
