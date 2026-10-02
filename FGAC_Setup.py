@@ -26,7 +26,7 @@
 # default on re-runs, so a value typed once (or left empty) persists. To make a hardcoded
 # default actually apply, set DEFAULT_CATALOG below; if the widget is present but empty we
 # force the default in. Job runs inject a non-empty value, so that branch is skipped.
-DEFAULT_CATALOG = ""  # optional: hardcode a default, e.g. "fevm_shared_catalog"
+DEFAULT_CATALOG = ""  # optional: hardcode a default, e.g. "catalog"
 
 dbutils.widgets.text("catalog_name", DEFAULT_CATALOG, "Catalog Name")
 if DEFAULT_CATALOG and not dbutils.widgets.get("catalog_name").strip():

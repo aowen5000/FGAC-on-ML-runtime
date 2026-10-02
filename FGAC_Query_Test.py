@@ -27,7 +27,7 @@
 # DEFAULT_CATALOG to hardcode a default for interactive runs; if the widget is present but
 # empty we force it in. Job runs inject a non-empty value via base_parameters, so the
 # force branch is skipped there.
-DEFAULT_CATALOG = ""  # optional: hardcode a default, e.g. "fevm_shared_catalog"
+DEFAULT_CATALOG = ""  # optional: hardcode a default, e.g. "catalog"
 
 dbutils.widgets.text("catalog_name", DEFAULT_CATALOG, "Catalog Name")
 if DEFAULT_CATALOG and not dbutils.widgets.get("catalog_name").strip():
