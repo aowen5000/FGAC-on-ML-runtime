@@ -10,6 +10,7 @@ A deployable test environment for **Row-Level Filters** and **Column Masks** in 
 
 | Resource | Details |
 |---|---|
+| Catalog | `<your_catalog>` — created automatically if it does not already exist |
 | Schema | `<your_catalog>.rls_demo` |
 | Table | `<your_catalog>.rls_demo.employees` — 200 rows of Faker-generated employee data |
 | Row Filter | `region_filter` — restricts non-privileged users to US-region rows only |
@@ -46,13 +47,16 @@ The deploying user needs **all** of the following:
 
 | Permission | Securable | Why |
 |---|---|---|
+| `CREATE CATALOG` | Metastore | Create the target catalog if it does not already exist |
 | `USE CATALOG` | Target catalog | Navigate into the catalog |
 | `CREATE SCHEMA` | Target catalog | Create the `rls_demo` schema |
 | `CREATE TABLE` | `<catalog>.rls_demo` schema | Create the `employees` table |
 | `CREATE FUNCTION` | `<catalog>.rls_demo` schema | Create row filter and column mask UDFs |
 | `GRANT` privilege | Target catalog, schema, table, functions | Grant `USE CATALOG`, `USE SCHEMA`, `SELECT`, `EXECUTE` to `Upstart_ML_all` |
 
-> **Tip:** Catalog owner or metastore admin satisfies all of the above.
+> **Tip:** A metastore admin (or any user granted `CREATE CATALOG`) satisfies all of the
+> above. A plain catalog owner is **not** enough, since setup issues `CREATE CATALOG IF NOT
+> EXISTS`, which requires the metastore-level privilege even when the catalog already exists.
 
 ### Account-Level Permissions
 
@@ -160,8 +164,13 @@ Use this path only if you are not deploying with the CLI.
 
 ### Teardown
 
+> **⚠️ Destructive.** Teardown runs `DROP CATALOG ... CASCADE`, which deletes the **entire
+> catalog** named by `catalog_name` and everything in it, not just the `rls_demo` schema.
+> Only run it against a catalog created for this demo. Never point `catalog_name` at a
+> shared or production catalog.
+
 ```bash
-# Remove FGAC resources (table, schema, UDFs, group)
+# Remove FGAC resources (catalog, schema, table, UDFs, group)
 databricks bundle run fgac_teardown --target dev -p fgac-demo
 
 # Remove deployed bundle resources (cluster, jobs) from the workspace
@@ -182,7 +191,7 @@ The `Create_ML_Cluster` notebook provisions:
 
 1. Open `FGAC_Teardown` notebook
 2. Set the `catalog_name` widget to the same catalog used during setup
-3. Run All cells — this removes the row filter, column masks, UDFs, table, schema, and groups
+3. Run All cells — this removes the row filter, column masks, UDFs, table, schema, group, **and the catalog itself** (`DROP CATALOG ... CASCADE`)
 4. Manually terminate or delete the ML cluster from the Compute page
 
 ## Demo Walkthrough

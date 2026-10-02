@@ -6,7 +6,7 @@ variables:
   catalog_name:
     description: >-
       Unity Catalog catalog to deploy into.
-      Must already exist and you must have CREATE SCHEMA on it.
+      Created if it does not already exist (requires CREATE CATALOG on the metastore).
     default: ""
   node_type:
     description: EC2 instance type for the ML cluster.

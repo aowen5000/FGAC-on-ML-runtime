@@ -6,14 +6,14 @@
 # MAGIC This notebook sets up a complete test environment for **Row-Level Filters** and **Column Masks** in Unity Catalog.
 # MAGIC
 # MAGIC **What it creates:**
-# MAGIC 1. A schema in your chosen catalog
+# MAGIC 1. The catalog (if it does not already exist) and a schema within it
 # MAGIC 2. An `employees` table with 200 rows of realistic Faker-generated data
 # MAGIC 3. SQL UDFs for row filtering and column masking
 # MAGIC 4. An account-level group: `Upstart_ML_all` (full access — members bypass all restrictions)
 # MAGIC 5. All necessary grants (USE CATALOG, USE SCHEMA, SELECT, EXECUTE)
 # MAGIC
 # MAGIC **Parameters:**
-# MAGIC - `catalog_name`: The Unity Catalog catalog to use (must already exist and you must have CREATE SCHEMA privilege on it)
+# MAGIC - `catalog_name`: The Unity Catalog catalog to use. It is created if it does not already exist, so you need `CREATE CATALOG` on the metastore (metastore admin, or a user with that privilege).
 
 # COMMAND ----------
 
@@ -30,7 +30,9 @@ print(f"Full table name: {FQN}")
 
 # COMMAND ----------
 
-# DBTITLE 1,Step 1: Create Schema
+# DBTITLE 1,Step 1: Create Catalog and Schema
+spark.sql(f"CREATE CATALOG IF NOT EXISTS {CATALOG}")
+print(f"Catalog {CATALOG} created (or already exists)")
 spark.sql(f"CREATE SCHEMA IF NOT EXISTS {CATALOG}.{SCHEMA}")
 print(f"Schema {CATALOG}.{SCHEMA} created (or already exists)")
 
