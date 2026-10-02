@@ -1,3 +1,7 @@
+# Note: FGAC_Query_Test is intentionally NOT defined as a job. It must be run
+# interactively by attaching to the FGAC-ML-Runtime-Test cluster, because the demo
+# shows how DIFFERENT users see different data based on group membership. A job would
+# always run as a single identity and could not demonstrate that difference.
 resources:
   jobs:
     fgac_setup:
@@ -9,19 +13,6 @@ resources:
         - task_key: setup
           notebook_task:
             notebook_path: ../FGAC_Setup.py
-            base_parameters:
-              catalog_name: ${var.catalog_name}
-          existing_cluster_id: ${resources.clusters.fgac_ml_cluster.id}
-
-    fgac_query_test:
-      name: FGAC_Query_Test
-      description: >-
-        Runs SELECT * and validation queries against the employees table
-        to demonstrate row-level filters and column masks on the ML runtime.
-      tasks:
-        - task_key: query_test
-          notebook_task:
-            notebook_path: ../FGAC_Query_Test.py
             base_parameters:
               catalog_name: ${var.catalog_name}
           existing_cluster_id: ${resources.clusters.fgac_ml_cluster.id}

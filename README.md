@@ -141,9 +141,16 @@ databricks bundle deploy --target dev -p fgac-demo
 # 6. Run the setup job to create schema, table, UDFs, group, and grants
 databricks bundle run fgac_setup --target dev -p fgac-demo
 
-# 7. Run the query test to verify FGAC is working
-databricks bundle run fgac_query_test --target dev -p fgac-demo
+# 7. Verify FGAC: open the FGAC_Query_Test notebook, attach it to the
+#    FGAC-ML-Runtime-Test cluster, and Run All (see note below).
+#    It is run interactively, not as a job.
 ```
+
+> **`FGAC_Query_Test` is run interactively, not as a job.** The test demonstrates how
+> *different users* see different data based on group membership, so each person must run
+> it as themselves by attaching to the `FGAC-ML-Runtime-Test` cluster. A job would always
+> run as one identity and could not show that difference, which is why it is deliberately
+> not defined in `resources/fgac_jobs.yml`.
 
 > **The bundle creates the ML cluster for you.** `databricks bundle deploy` provisions
 > the `FGAC-ML-Runtime-Test` cluster from `resources/fgac_cluster.yml`. Do **not** run the
@@ -156,25 +163,25 @@ if the previous one succeeded):
 
 ```bash
 databricks bundle deploy --target dev --var="catalog_name=<your_catalog>" -p fgac-test && \
-databricks bundle run fgac_setup --target dev --var="catalog_name=<your_catalog>" -p fgac-test && \
-databricks bundle run fgac_query_test --target dev --var="catalog_name=<your_catalog>" -p fgac-test
+databricks bundle run fgac_setup --target dev --var="catalog_name=<your_catalog>" -p fgac-test
 ```
 
 What it does, in order:
 
-1. **`bundle deploy`** uploads the notebooks and creates the ML cluster and the four jobs in
+1. **`bundle deploy`** uploads the notebooks and creates the ML cluster and the jobs in
    the workspace (in `dev` mode they are prefixed with `[dev <your_username>]`). This only
    provisions the resources; it does not run anything.
 2. **`bundle run fgac_setup`** starts the cluster, then creates the `rls_demo` schema,
    the `employees` table, the row-filter/column-mask UDFs, the `Upstart_ML_all` account
    group, and the grants, all inside `<your_catalog>`.
-3. **`bundle run fgac_query_test`** queries the table to confirm the row filter and column
-   masks are in effect.
+
+Then verify interactively: open `FGAC_Query_Test`, attach it to the `FGAC-ML-Runtime-Test`
+cluster, and Run All. It is not part of this chain because it is run per-user, not as a job.
 
 Because of the `&&`, if any step fails the chain stops. For example, if your identity
-lacks `CREATE SCHEMA` on `<your_catalog>`, `fgac_setup` fails and the query test does not
-run. Pass `--var="catalog_name=..."` on every command (as above), or `export
-BUNDLE_VAR_catalog_name=<your_catalog>` once and drop the `--var` flags.
+lacks `CREATE SCHEMA` on `<your_catalog>`, `fgac_setup` fails. Pass `--var="catalog_name=..."`
+on every command (as above), or `export BUNDLE_VAR_catalog_name=<your_catalog>` once and
+drop the `--var` flags.
 
 ### Option B: Manual deployment (no CLI)
 
