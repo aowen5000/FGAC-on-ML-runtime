@@ -40,6 +40,13 @@ A deployable test environment for **Row-Level Filters** and **Column Masks** in 
 
 ## Required Permissions
 
+> **⚠️ Prerequisite: Serverless compute must be enabled in the workspace.** Dedicated
+> (single-user) clusters delegate row-filter / column-mask evaluation to serverless, so
+> without serverless enabled, any query against the protected `employees` table fails with
+> `ROW_COLUMN_ACCESS_POLICIES_NOT_SUPPORTED_ON_ASSIGNED_CLUSTERS`. The cluster must also run
+> **Databricks Runtime 15.4 LTS or later** (this repo uses 16.4 LTS ML). See
+> [FGAC on dedicated compute](https://docs.databricks.com/aws/en/compute/single-user-fgac).
+
 The deploying user needs **all** of the following:
 
 ### Unity Catalog Permissions
@@ -72,6 +79,7 @@ You must supply an **existing** catalog via `catalog_name`; the repo does not cr
 
 | Permission | Why |
 |---|---|
+| **Serverless compute enabled** | Required for dedicated clusters to evaluate row filters / column masks (filtering is delegated to serverless) |
 | `Allow unrestricted cluster creation` OR cluster policy access | Provision the 16.4 LTS ML single-node cluster |
 | Workspace access for demo users | Users in the test groups need workspace access to run the query notebook |
 
