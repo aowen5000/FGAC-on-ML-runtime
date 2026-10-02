@@ -267,4 +267,4 @@ notebook manually**. It is deliberately not a job, because the whole point is th
 - After reattaching the cluster, they revert to the restricted view (default for non-members).
 
 > ⚠️ On dedicated (single-user) compute, group membership is cached at cluster attach time.
-> You MUST detach and reattach the cluster (or restart it) for the change to take effect.
+> Detach and reattach the cluster (or restart it) for the change to take effect.
