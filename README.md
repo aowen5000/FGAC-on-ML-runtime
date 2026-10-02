@@ -149,6 +149,33 @@ databricks bundle run fgac_query_test --target dev -p fgac-demo
 > the `FGAC-ML-Runtime-Test` cluster from `resources/fgac_cluster.yml`. Do **not** run the
 > `Create_ML_Cluster` notebook on this path, it would create a duplicate cluster.
 
+#### Deploy and run in one command
+
+To deploy and execute in a single line, chain the commands with `&&` (each step runs only
+if the previous one succeeded):
+
+```bash
+databricks bundle deploy --target dev --var="catalog_name=<your_catalog>" -p fgac-test && \
+databricks bundle run fgac_setup --target dev --var="catalog_name=<your_catalog>" -p fgac-test && \
+databricks bundle run fgac_query_test --target dev --var="catalog_name=<your_catalog>" -p fgac-test
+```
+
+What it does, in order:
+
+1. **`bundle deploy`** uploads the notebooks and creates the ML cluster and the four jobs in
+   the workspace (in `dev` mode they are prefixed with `[dev <your_username>]`). This only
+   provisions the resources; it does not run anything.
+2. **`bundle run fgac_setup`** starts the cluster, then creates the `rls_demo` schema,
+   the `employees` table, the row-filter/column-mask UDFs, the `Upstart_ML_all` account
+   group, and the grants, all inside `<your_catalog>`.
+3. **`bundle run fgac_query_test`** queries the table to confirm the row filter and column
+   masks are in effect.
+
+Because of the `&&`, if any step fails the chain stops. For example, if your identity
+lacks `CREATE SCHEMA` on `<your_catalog>`, `fgac_setup` fails and the query test does not
+run. Pass `--var="catalog_name=..."` on every command (as above), or `export
+BUNDLE_VAR_catalog_name=<your_catalog>` once and drop the `--var` flags.
+
 ### Option B: Manual deployment (no CLI)
 
 Use this path only if you are not deploying with the CLI.
