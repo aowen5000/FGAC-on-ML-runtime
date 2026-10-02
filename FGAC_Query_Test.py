@@ -20,9 +20,19 @@
 # COMMAND ----------
 
 # DBTITLE 1,Configure Parameters
-dbutils.widgets.text("catalog_name", "", "Catalog Name")
-CATALOG = dbutils.widgets.get("catalog_name")
-assert CATALOG, "Please provide a catalog_name parameter"
+# An existing widget value is "sticky" (dbutils ignores the default on re-runs). Set
+# DEFAULT_CATALOG to hardcode a default for interactive runs; if the widget is present but
+# empty we force it in. Job runs inject a non-empty value via base_parameters, so the
+# force branch is skipped there.
+DEFAULT_CATALOG = ""  # optional: hardcode a default, e.g. "fevm_shared_catalog"
+
+dbutils.widgets.text("catalog_name", DEFAULT_CATALOG, "Catalog Name")
+if DEFAULT_CATALOG and not dbutils.widgets.get("catalog_name").strip():
+    dbutils.widgets.remove("catalog_name")
+    dbutils.widgets.text("catalog_name", DEFAULT_CATALOG, "Catalog Name")
+
+CATALOG = dbutils.widgets.get("catalog_name").strip()
+assert CATALOG, "Type a catalog into the 'Catalog Name' widget at the top, or set DEFAULT_CATALOG in this cell."
 
 print(f"Testing FGAC on: {CATALOG}.rls_demo.employees")
 print(f"Current user: {spark.sql('SELECT current_user()').collect()[0][0]}")

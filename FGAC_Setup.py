@@ -18,13 +18,24 @@
 # COMMAND ----------
 
 # DBTITLE 1,Configure Parameters
-dbutils.widgets.text("catalog_name", "", "Catalog Name")
-CATALOG = dbutils.widgets.get("catalog_name")
+# Catalog comes from the `catalog_name` widget (interactive runs) or from the job's
+# base_parameters (job runs). An existing widget value is "sticky": dbutils ignores the
+# default on re-runs, so a value typed once (or left empty) persists. To make a hardcoded
+# default actually apply, set DEFAULT_CATALOG below; if the widget is present but empty we
+# force the default in. Job runs inject a non-empty value, so that branch is skipped.
+DEFAULT_CATALOG = ""  # optional: hardcode a default, e.g. "fevm_shared_catalog"
+
+dbutils.widgets.text("catalog_name", DEFAULT_CATALOG, "Catalog Name")
+if DEFAULT_CATALOG and not dbutils.widgets.get("catalog_name").strip():
+    dbutils.widgets.remove("catalog_name")
+    dbutils.widgets.text("catalog_name", DEFAULT_CATALOG, "Catalog Name")
+
+CATALOG = dbutils.widgets.get("catalog_name").strip()
 SCHEMA = "rls_demo"
 TABLE_NAME = "employees"
 FQN = f"{CATALOG}.{SCHEMA}.{TABLE_NAME}"
 
-assert CATALOG, "Please provide a catalog_name parameter"
+assert CATALOG, "Type a catalog into the 'Catalog Name' widget at the top, or set DEFAULT_CATALOG in this cell."
 print(f"Using catalog: {CATALOG}")
 print(f"Full table name: {FQN}")
 
@@ -64,7 +75,7 @@ print(f"Schema {CATALOG}.{SCHEMA} created (or already exists)")
 # COMMAND ----------
 
 # DBTITLE 1,Re-read parameters after restart
-CATALOG = dbutils.widgets.get("catalog_name")
+CATALOG = dbutils.widgets.get("catalog_name").strip()
 SCHEMA = "rls_demo"
 TABLE_NAME = "employees"
 FQN = f"{CATALOG}.{SCHEMA}.{TABLE_NAME}"
@@ -210,7 +221,7 @@ for group_name in ["Upstart_ML_all"]:
 # COMMAND ----------
 
 # DBTITLE 1,Step 8: Grant Permissions to Both Groups
-CATALOG = dbutils.widgets.get("catalog_name")
+CATALOG = dbutils.widgets.get("catalog_name").strip()
 SCHEMA = "rls_demo"
 
 grants = [
@@ -237,7 +248,7 @@ print(f"\nCompleted: {success}/{len(grants)} grants succeeded")
 # COMMAND ----------
 
 # DBTITLE 1,Step 9: Verify Setup
-CATALOG = dbutils.widgets.get("catalog_name")
+CATALOG = dbutils.widgets.get("catalog_name").strip()
 FQN = f"{CATALOG}.rls_demo.employees"
 
 print(f"Current user: {spark.sql('SELECT current_user()').collect()[0][0]}")
