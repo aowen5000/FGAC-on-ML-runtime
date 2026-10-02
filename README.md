@@ -241,8 +241,7 @@ notebook manually**. It is deliberately not a job, because the whole point is th
    or import it from this repo).
 2. **Attach it to the `FGAC-ML-Runtime-Test` cluster** (top-right compute selector). It
    must run on that dedicated ML cluster, not serverless or another cluster.
-3. In the **`catalog_name`** widget at the top, enter the catalog you deployed into
-   (e.g. `amitabh_arora_catalog`).
+3. In the **`catalog_name`** widget at the top, enter the existing catalog you deployed into.
 4. Click **Run All**. The notebook prints your group membership, then runs the queries so
    you can see the row filter and column masks for yourself.
 
