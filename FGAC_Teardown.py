@@ -20,7 +20,10 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,Configure Parameters
+# DBTITLE 1,Create Catalog Widget
+# Create the widget in its own cell so the widget panel always renders, even on the first
+# run. (If widget creation shared a cell with the assert below, a failed assert on the first
+# run would stop the cell before the widget appeared.)
 # An existing widget value is "sticky" (dbutils ignores the default on re-runs). Set
 # DEFAULT_CATALOG to hardcode a default for interactive runs; if the widget is present but
 # empty we force it in. Job runs inject a non-empty value via base_parameters, so the
@@ -32,10 +35,13 @@ if DEFAULT_CATALOG and not dbutils.widgets.get("catalog_name").strip():
     dbutils.widgets.remove("catalog_name")
     dbutils.widgets.text("catalog_name", DEFAULT_CATALOG, "Catalog Name")
 
+# COMMAND ----------
+
+# DBTITLE 1,Read and Validate Catalog
 CATALOG = dbutils.widgets.get("catalog_name").strip()
 SCHEMA = "rls_demo"
 
-assert CATALOG, "Type a catalog into the 'Catalog Name' widget at the top, or set DEFAULT_CATALOG in this cell."
+assert CATALOG, "Type a catalog into the 'Catalog Name' widget at the top, or set DEFAULT_CATALOG in the previous cell."
 
 # Pin the session to this catalog so dropping the FGAC objects on dedicated compute
 # resolves against it, not the workspace default catalog.
