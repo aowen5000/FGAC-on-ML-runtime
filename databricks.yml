@@ -5,8 +5,8 @@ bundle:
 variables:
   catalog_name:
     description: >-
-      Unity Catalog catalog to deploy into.
-      Created if it does not already exist (requires CREATE CATALOG on the metastore).
+      Existing Unity Catalog catalog to deploy into. Must already exist;
+      you need USE CATALOG and CREATE SCHEMA on it. The bundle does not create it.
     default: ""
   node_type:
     description: EC2 instance type for the ML cluster.

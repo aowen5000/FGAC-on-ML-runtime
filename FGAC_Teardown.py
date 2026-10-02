@@ -10,9 +10,11 @@
 # MAGIC This notebook removes all resources created by `FGAC_Setup`:
 # MAGIC - Drops the row filter and column masks from the table
 # MAGIC - Drops the UDFs
-# MAGIC - Drops the table and schema
-# MAGIC - Drops the catalog
+# MAGIC - Drops the table and the `rls_demo` schema
 # MAGIC - Deletes the account-level groups
+# MAGIC
+# MAGIC The **catalog you provided is left intact** — this notebook only removes the
+# MAGIC `rls_demo` schema and its contents, never the catalog itself.
 # MAGIC
 # MAGIC **Parameter:** `catalog_name` must match the value used during setup.
 
@@ -56,13 +58,7 @@ print(f"Will tear down resources in: {CATALOG}.{SCHEMA}")
 
 # COMMAND ----------
 
-# DBTITLE 1,Step 4: Drop Catalog
-# MAGIC %sql
-# MAGIC DROP CATALOG IF EXISTS ${catalog_name} CASCADE
-
-# COMMAND ----------
-
-# DBTITLE 1,Step 5: Delete Account-Level Groups
+# DBTITLE 1,Step 4: Delete Account-Level Groups
 import requests
 
 ctx = dbutils.notebook.entry_point.getDbutils().notebook().getContext()
