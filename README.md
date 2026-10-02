@@ -101,7 +101,7 @@ FGAC-on-ML-runtime/
 | `catalog_name` | Unity Catalog catalog to deploy into | _(required)_ |
 | `node_type` | EC2 instance type for the ML cluster | `i3.xlarge` |
 
-Set a variable on the command line with `-var="catalog_name=your_catalog"`, or once for
+Set a variable on the command line with `--var="catalog_name=your_catalog"`, or once for
 the whole session via the environment: `export BUNDLE_VAR_catalog_name=your_catalog`.
 
 ### Bundle Targets
@@ -118,7 +118,7 @@ the whole session via the environment: `export BUNDLE_VAR_catalog_name=your_cata
 
 The bundle commands below authenticate with the CLI profile named by `-p`. Swap
 `fgac-demo` for your own profile name, or omit `-p` entirely to use your `DEFAULT`
-profile. Setting `BUNDLE_VAR_catalog_name` once means you don't repeat `-var=...` on
+profile. Setting `BUNDLE_VAR_catalog_name` once means you don't repeat `--var=...` on
 every command.
 
 ```bash
