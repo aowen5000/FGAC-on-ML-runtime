@@ -134,6 +134,24 @@ schema = StructType([
 ])
 
 df = spark.createDataFrame(rows, schema)
+
+# Make this notebook safely re-runnable. If the table already exists with a row filter or
+# column masks, overwriting it is NOT supported on dedicated (assigned) compute, so detach
+# any policies and drop the table first for a clean rebuild.
+if spark.catalog.tableExists(FQN):
+    print(f"{FQN} already exists; detaching any FGAC policies and dropping it for a clean rebuild")
+    for stmt in [
+        f"ALTER TABLE {FQN} DROP ROW FILTER",
+        f"ALTER TABLE {FQN} ALTER COLUMN ssn DROP MASK",
+        f"ALTER TABLE {FQN} ALTER COLUMN salary DROP MASK",
+        f"ALTER TABLE {FQN} ALTER COLUMN email DROP MASK",
+    ]:
+        try:
+            spark.sql(stmt)
+        except Exception as e:
+            print(f"  (nothing to drop) {str(e)[:100]}")
+    spark.sql(f"DROP TABLE IF EXISTS {FQN}")
+
 df.write.mode("overwrite").saveAsTable(FQN)
 print(f"Table {FQN} created with {df.count()} rows")
 df.show(5, truncate=False)
