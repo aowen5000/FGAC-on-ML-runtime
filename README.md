@@ -231,17 +231,33 @@ The `Create_ML_Cluster` notebook provisions:
 
 ## Demo Walkthrough
 
+After `fgac_setup` has run, you see FGAC in action by running the **`FGAC_Query_Test`
+notebook manually**. It is deliberately not a job, because the whole point is that
+*different users* see different data, so each person runs it as themselves.
+
+### How to run FGAC_Query_Test (do this manually)
+
+1. In the workspace, open the **`FGAC_Query_Test`** notebook (under your bundle folder,
+   or import it from this repo).
+2. **Attach it to the `FGAC-ML-Runtime-Test` cluster** (top-right compute selector). It
+   must run on that dedicated ML cluster, not serverless or another cluster.
+3. In the **`catalog_name`** widget at the top, enter the catalog you deployed into
+   (e.g. `amitabh_arora_catalog`).
+4. Click **Run All**. The notebook prints your group membership, then runs the queries so
+   you can see the row filter and column masks for yourself.
+
 ### 1. Show restricted access
-- Have a demo user attach to the ML cluster, open `FGAC_Query_Test`, set `catalog_name`, and Run All
-- They'll see only US rows (~69) with masked SSN (`***-**-XXXX`), email (`****@domain`), and salary (`NULL`)
+- As a user who is **not** in `Upstart_ML_all`, run `FGAC_Query_Test` as above.
+- You'll see only US rows (~69) with masked SSN (`***-**-XXXX`), email (`****@domain`), and salary (`NULL`).
 
 ### 2. Show full access
-- Use `Manage_Test_Groups` to add the user to `Upstart_ML_all`
-- User restarts/reattaches their cluster, re-runs `FGAC_Query_Test`
-- They'll now see all 200 rows with raw, unmasked data
+- Use `Manage_Test_Groups` to add the user to `Upstart_ML_all`.
+- The user **detaches and reattaches** (or restarts) the `FGAC-ML-Runtime-Test` cluster, then re-runs `FGAC_Query_Test`.
+- They'll now see all 200 rows with raw, unmasked data.
 
 ### 3. Reset
-- Use `Manage_Test_Groups` to remove the user from `Upstart_ML_all`
-- They'll revert to the restricted view (default for non-members)
+- Use `Manage_Test_Groups` to remove the user from `Upstart_ML_all`.
+- After reattaching the cluster, they revert to the restricted view (default for non-members).
 
-> **Note:** Group membership changes require the user to detach and reattach their cluster (or restart it) before taking effect.
+> **Note:** Group membership changes require the user to detach and reattach their cluster
+> (or restart it) before taking effect, because membership is cached at cluster attach time.
