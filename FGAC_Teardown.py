@@ -36,6 +36,10 @@ CATALOG = dbutils.widgets.get("catalog_name").strip()
 SCHEMA = "rls_demo"
 
 assert CATALOG, "Type a catalog into the 'Catalog Name' widget at the top, or set DEFAULT_CATALOG in this cell."
+
+# Pin the session to this catalog so dropping the FGAC objects on dedicated compute
+# resolves against it, not the workspace default catalog.
+spark.sql(f"USE CATALOG {CATALOG}")
 print(f"Will tear down resources in: {CATALOG}.{SCHEMA}")
 
 # COMMAND ----------

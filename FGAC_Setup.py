@@ -62,6 +62,12 @@ print(f"Catalog {CATALOG} found")
 spark.sql(f"CREATE SCHEMA IF NOT EXISTS {CATALOG}.{SCHEMA}")
 print(f"Schema {CATALOG}.{SCHEMA} created (or already exists)")
 
+# Pin the session to this catalog so FGAC operations on dedicated (single-user) compute
+# resolve against it, not the workspace default catalog. This makes the demo fully
+# self-contained in the catalog you provided and removes any dependency on the default.
+spark.sql(f"USE CATALOG {CATALOG}")
+print(f"Session catalog set to {CATALOG}")
+
 # COMMAND ----------
 
 # DBTITLE 1,Step 2: Install Faker
@@ -79,7 +85,9 @@ CATALOG = dbutils.widgets.get("catalog_name").strip()
 SCHEMA = "rls_demo"
 TABLE_NAME = "employees"
 FQN = f"{CATALOG}.{SCHEMA}.{TABLE_NAME}"
-print(f"Restored parameters — target table: {FQN}")
+# Re-pin the session catalog after the Python restart, before the FGAC-apply steps.
+spark.sql(f"USE CATALOG {CATALOG}")
+print(f"Restored parameters, session catalog set to {CATALOG}; target table: {FQN}")
 
 # COMMAND ----------
 

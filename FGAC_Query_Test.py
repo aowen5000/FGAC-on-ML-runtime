@@ -34,6 +34,10 @@ if DEFAULT_CATALOG and not dbutils.widgets.get("catalog_name").strip():
 CATALOG = dbutils.widgets.get("catalog_name").strip()
 assert CATALOG, "Type a catalog into the 'Catalog Name' widget at the top, or set DEFAULT_CATALOG in this cell."
 
+# Pin the session to this catalog so reading the FGAC-protected table on dedicated
+# compute resolves against it, not the workspace default catalog.
+spark.sql(f"USE CATALOG {CATALOG}")
+
 print(f"Testing FGAC on: {CATALOG}.rls_demo.employees")
 print(f"Current user: {spark.sql('SELECT current_user()').collect()[0][0]}")
 

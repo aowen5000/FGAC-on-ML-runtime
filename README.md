@@ -56,6 +56,11 @@ You must supply an **existing** catalog via `catalog_name`; the repo does not cr
 
 > **Tip:** Being the owner of the target catalog (or a metastore admin) satisfies all of the above.
 
+> **No workspace-default-catalog dependency.** Each notebook runs `USE CATALOG <your_catalog>`
+> after resolving `catalog_name`, so every operation, including applying and evaluating row
+> filters / column masks on dedicated (single-user) compute, resolves against the catalog you
+> provide. The demo does not rely on the workspace default catalog setting.
+
 ### Account-Level Permissions
 
 | Permission | Why |
