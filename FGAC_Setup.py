@@ -30,6 +30,13 @@ print(f"Full table name: {FQN}")
 
 # COMMAND ----------
 
+# DBTITLE 1,Available Catalogs (reference — pick one for the catalog_name widget)
+# Lists the catalogs you can see in this workspace. Use one of these names in the
+# `catalog_name` widget above. You need USE CATALOG + CREATE SCHEMA on the one you pick.
+spark.sql("SHOW CATALOGS").display()
+
+# COMMAND ----------
+
 # DBTITLE 1,Step 1: Validate Catalog and Create Schema
 # The catalog must already exist and you must have USE CATALOG + CREATE SCHEMA on it.
 # This notebook does NOT create the catalog.
