@@ -17,7 +17,10 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,Configure Parameters
+# DBTITLE 1,Create Catalog Widget
+# Create the widget in its own cell so the widget panel always renders, even on the first
+# run. (If widget creation shared a cell with the assert below, a failed assert on the first
+# run would stop the cell before the widget appeared.)
 # Catalog comes from the `catalog_name` widget (interactive runs) or from the job's
 # base_parameters (job runs). An existing widget value is "sticky": dbutils ignores the
 # default on re-runs, so a value typed once (or left empty) persists. To make a hardcoded
@@ -30,12 +33,15 @@ if DEFAULT_CATALOG and not dbutils.widgets.get("catalog_name").strip():
     dbutils.widgets.remove("catalog_name")
     dbutils.widgets.text("catalog_name", DEFAULT_CATALOG, "Catalog Name")
 
+# COMMAND ----------
+
+# DBTITLE 1,Read and Validate Parameters
 CATALOG = dbutils.widgets.get("catalog_name").strip()
 SCHEMA = "rls_demo"
 TABLE_NAME = "employees"
 FQN = f"{CATALOG}.{SCHEMA}.{TABLE_NAME}"
 
-assert CATALOG, "Type a catalog into the 'Catalog Name' widget at the top, or set DEFAULT_CATALOG in this cell."
+assert CATALOG, "Type a catalog into the 'Catalog Name' widget at the top, or set DEFAULT_CATALOG in the previous cell."
 print(f"Using catalog: {CATALOG}")
 print(f"Full table name: {FQN}")
 
