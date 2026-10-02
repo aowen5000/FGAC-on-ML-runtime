@@ -266,5 +266,8 @@ notebook manually**. It is deliberately not a job, because the whole point is th
 - Use `Manage_Test_Groups` to remove the user from `Upstart_ML_all`.
 - After reattaching the cluster, they revert to the restricted view (default for non-members).
 
+> ⚠️ On dedicated (single-user) compute, group membership is cached at cluster attach time.
+> You MUST detach and reattach the cluster (or restart it) for the change to take effect.
+
 > **Note:** Group membership changes require the user to detach and reattach their cluster
 > (or restart it) before taking effect, because membership is cached at cluster attach time.
